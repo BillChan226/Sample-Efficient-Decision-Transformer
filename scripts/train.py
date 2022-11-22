@@ -12,6 +12,8 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
+sys.path.append('/home/gong112/service_backup/work/zhaorun/min-decision-transformer/')
+
 from decision_transformer.utils import D4RLTrajectoryDataset, evaluate_on_env, get_d4rl_normalized_score
 from decision_transformer.model import DecisionTransformer
 
@@ -38,6 +40,11 @@ def train(args):
         env_name = 'Hopper-v3'
         rtg_target = 3600
         env_d4rl_name = f'hopper-{dataset}-v2'
+
+    elif args.env == 'ant':
+        env_name = 'Ant-v3'
+        rtg_target = 3600
+        env_d4rl_name = f'ant-{dataset}-v2'
 
     else:
         raise NotImplementedError
@@ -108,6 +115,7 @@ def train(args):
                             drop_last=True
                         )
 
+
     data_iter = iter(traj_data_loader)
 
     ## get state stats from dataset
@@ -160,6 +168,8 @@ def train(args):
             returns_to_go = returns_to_go.to(device).unsqueeze(dim=-1) # B x T x 1
             traj_mask = traj_mask.to(device)    # B x T
             action_target = torch.clone(actions).detach().to(device)
+            state_target = torch.clone(states).detach().to(device)
+            return_target = torch.clone(returns_to_go).detach().to(device)
 
             state_preds, action_preds, return_preds = model.forward(
                                                             timesteps=timesteps,
@@ -170,8 +180,22 @@ def train(args):
             # only consider non padded elements
             action_preds = action_preds.view(-1, act_dim)[traj_mask.view(-1,) > 0]
             action_target = action_target.view(-1, act_dim)[traj_mask.view(-1,) > 0]
+            #print('action_target',action_target)
+            #print('action_target_dim', np.shape(action_target))
 
-            action_loss = F.mse_loss(action_preds, action_target, reduction='mean')
+            state_preds = state_preds.view(-1, state_dim)[traj_mask.view(-1,) > 0]
+            state_target = state_target.view(-1, state_dim)[traj_mask.view(-1,) > 0]
+            #print('state_target',state_target)
+            #print('state_target_dim', np.shape(state_target))
+
+            return_preds = return_preds.view(-1, 1)[traj_mask.view(-1,) > 0]
+            return_target = return_target.view(-1, 1)[traj_mask.view(-1,) > 0]
+            #print('return_target',return_target)
+            #print('return_target_dim', np.shape(return_target))
+
+            state_loss = F.mse_loss(state_preds[0:-2,:], state_target[1:-1,:], reduction='mean')
+            return_loss = F.mse_loss(return_preds[0:-2,0], return_target[1:-1,0], reduction='mean')
+            action_loss = F.mse_loss(action_preds, action_target, reduction='mean') + state_loss + return_loss
 
             optimizer.zero_grad()
             action_loss.backward()
@@ -249,8 +273,9 @@ if __name__ == "__main__":
     parser.add_argument('--max_eval_ep_len', type=int, default=1000)
     parser.add_argument('--num_eval_ep', type=int, default=10)
 
-    parser.add_argument('--dataset_dir', type=str, default='data/')
-    parser.add_argument('--log_dir', type=str, default='dt_runs/')
+    parser.add_argument('--dataset_dir', type=str, default='data/data/')
+    #parser.add_argument('--log_dir', type=str, default='dt_runs/')
+    parser.add_argument('--log_dir', type=str, default='test/')
 
     parser.add_argument('--context_len', type=int, default=20)
     parser.add_argument('--n_blocks', type=int, default=3)

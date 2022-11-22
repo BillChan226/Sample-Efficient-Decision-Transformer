@@ -3,43 +3,25 @@
 
 ## Overview
 
-Minimal code for [Decision Transformer: Reinforcement Learning via Sequence Modeling](https://arxiv.org/abs/2106.01345) for mujoco control tasks in OpenAI gym.
-Notable difference from official implementation are:
-
-- Simple GPT implementation (causal transformer)
-- Uses PyTorch's Dataset and Dataloader class and removes redundant computations for calculating rewards to go and state normalization for efficient training
-- Can be trained and the results can be visualized and rendered on google colab with the provided notebook
-
-#### [Open `min_decision_transformer.ipynb` in Google Colab](https://colab.research.google.com/github/nikhilbarhate99/min-decision-transformer/blob/master/min_decision_transformer.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nikhilbarhate99/min-decision-transformer/blob/master/min_decision_transformer.ipynb)
-
-
+This paper generally builds upon [Decision Transformer: Reinforcement Learning via Sequence Modeling](https://arxiv.org/abs/2106.01345). We use the official codes as a guideline and also take several other github repositories as [reference](https://github.com/nikhilbarhate99/min-decision-transformer) to construct a minimized decision transformer implementation. Our codes are also published here on open-source platform [github](https://https://github.com/BillChan226/Sample-Efficient-Decision-Transformer).
 
 ## Results
 
-**Note:** these results are mean and variance of 3 random seeds obtained after 20k updates (due to timelimits on GPU resources on colab) while the official results are obtained after 100k updates. So these numbers are not directly comparable, but they can be used as rough reference points along with their corresponding plots to measure the learning progress of the model. The variance in returns and scores should decrease as training reaches saturation.
+In this study, we mainly conduct experiments to compare the performances of the original decision transformers(denoted as "DT") and our modified version of Sample-efficient decision transformers(denoted as "SE-DT") on the same tasks. The accumulated rewards along training are depicted above for each individual task. Table 1 summarizes the final performances of the sample-efficient decision transformer model(in terms of mean and variance). The convergence speed of accumulated rewards that sample-efficient decision transformers obtain for each environment are generally higher than that of the original decision transformer. It can be clear denoted that "SE-DT" demonstrates a better sample efficiency than "DT". However the variance of "SE-DT" is somehow larger. This is probably because the three terms of loss function are slightly different in their optimizing objectives, leading to a competitive variance. It is noted that the decision transformer model also demonstrates excellent performances on the untested Ant environment.
 
+The training results on the high-dimensional humanoid robot InMoov is presented in Figure 11. While the action space of InMoov environment is high dimensional, the task is as simple as solving a linear optimization problem, which has a fixed solution. Therefore both models converge to the same accuracy. However, a slight triumph of "SE-DT" over "DT" in sample efficiency can still be observed, as the red curve is slightly above the upper edge of the blue curve. The results in InMoov environment validate that decision transformers could adapt to complex high dimensional robotic scenarios.
 
-| Dataset | Environment | DT (this repo) 20k updates | DT (official) 100k updates|
-| :---: | :---: | :---: | :---: |
-| Medium | HalfCheetah | 42.18 ± 00.59 | 42.60 ± 00.10 |
-| Medium | Hopper | 69.43 ± 27.34 | 67.60 ± 01.00 |
-| Medium | Walker | 75.47 ± 31.08 | 74.00 ± 01.40 |
+## Originality Claim
 
-
-| ![](https://github.com/nikhilbarhate99/min-decision-transformer/blob/master/media/halfcheetah-medium-v2.png)  | ![](https://github.com/nikhilbarhate99/min-decision-transformer/blob/master/media/halfcheetah-medium-v2.gif)  |
-| :---:|:---: |
-
-
-| ![](https://github.com/nikhilbarhate99/min-decision-transformer/blob/master/media/hopper-medium-v2.png)  | ![](https://github.com/nikhilbarhate99/min-decision-transformer/blob/master/media/hopper-medium-v2.gif)  |
-| :---:|:---: |
-
-
-| ![](https://github.com/nikhilbarhate99/min-decision-transformer/blob/master/media/walker2d-medium-v2.png)  | ![](https://github.com/nikhilbarhate99/min-decision-transformer/blob/master/media/walker2d-medium-v2.gif)  |
-| :---:|:---: |
+The implementation of the sample-efficient decision transformer is built upon the general pipeline of [min-decision-transformer](https://github.com/nikhilbarhate99/min-decision-transformer). I have modified the model.py file in decision_tranformer folder, so that the modified model can predict the states and returns-to-go at each timestep with respect to the input previous walk data. This is as opposed to the original transformer, whose forward function can only predict actions and returns-to-go. Additionally, I have modified the main entrance file train.py in scripts folder, so that in the main loop the model could calculate and back-propagate the error not only on action predictions but also on states and returns-to-go predictions. In this way, we expect the modified model to be more sample-efficient. 
 
 
 
-## Instructions
+For datasets, we simply test and compare our modified sample-efficient decision transformer to the original decision transformer on 4 benchmark dynamic mujoco environments and a high-dimensional humanoid robot InMooV that I designed with my previous lab partners. The mujoco environments can be easily set up through openai gym, and the InMooV environment settings is clarified in [this paper](https://iopscience.iop.org/article/10.1088/1742-6596/1746/1/012035/pdf). All the environment and dataset are publicly accessible.
+
+
+
+## Run the experiments
 
 ### Mujoco-py
 
@@ -82,23 +64,14 @@ Additionally `--plot_avg` and `--save_fig` flags can be passed to the script to 
 2. Once the dataset is formatted and saved with `download_d4rl_datasets.py`, `d4rl` library is not required further for training.
 3. The evaluation is done on `v3` control environments in `mujoco-py` so that the results are consistent with the decision transformer paper.
 
-
-## Citing
-
-Please use this bibtex if you want to cite this repository in your publications:
-
-    @misc{minimal_decision_transformer,
-        author = {Barhate, Nikhil},
-        title = {Minimal Implementation of Decision Transformer},
-        year = {2022},
-        publisher = {GitHub},
-        journal = {GitHub repository},
-        howpublished = {\url{https://github.com/nikhilbarhate99/min-decision-transformer}},
-    }
-
-
-
 ## References
 
-- Official [code](https://github.com/kzl/decision-transformer) and [paper](https://arxiv.org/abs/2106.01345)
-- Minimal GPT (causal transformer) [tweet](https://twitter.com/MishaLaskin/status/1481767788775628801?cxt=HHwWgoCzmYD9pZApAAAA) and [colab notebook](https://colab.research.google.com/drive/1NUBqyboDcGte5qAJKOl8gaJC28V_73Iv?usp=sharing)
+[1] Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., ... & Polosukhin, I. (2017). Attention is all you need. Advances in neural information processing systems, 30.
+
+[2] Vinyals, O., Babuschkin, I., Czarnecki, W. M., Mathieu, M., Dudzik, A., Chung, J., ... & Silver, D. (2019). Grandmaster level in StarCraft II using multi-agent reinforcement learning. *Nature*, *575*(7782), 350-354.
+
+[3] Parisotto, E., Song, F., Rae, J., Pascanu, R., Gulcehre, C., Jayakumar, S., ... & Hadsell, R. (2020, November). Stabilizing transformers for reinforcement learning. In International conference on machine learning (pp. 7487-7498). PMLR.
+
+[4] Chen, L., Lu, K., Rajeswaran, A., Lee, K., Grover, A., Laskin, M., ... & Mordatch, I. (2021). Decision transformer: Reinforcement learning via sequence modeling. Advances in neural information processing systems, 34, 15084-15097.
+
+[5] Janner, M., Li, Q., & Levine, S. (2021, June). Reinforcement learning as one big sequence modeling problem. In ICML 2021 Workshop on Unsupervised Reinforcement Learning.

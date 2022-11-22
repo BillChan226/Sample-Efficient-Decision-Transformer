@@ -1,10 +1,13 @@
 import argparse
-import os
+import os, sys
 import gym
 import torch
 import numpy as np
+sys.path.append('/home/gong112/service_backup/work/zhaorun/min-decision-transformer/')
 from decision_transformer.utils import evaluate_on_env, get_d4rl_normalized_score, get_d4rl_dataset_stats
 from decision_transformer.model import DecisionTransformer
+
+
 
 def test(args):
 

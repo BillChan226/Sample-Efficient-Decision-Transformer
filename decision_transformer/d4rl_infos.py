@@ -4,12 +4,14 @@ REF_MIN_SCORE = {
     'halfcheetah' : -280.178953,
     'walker2d' : 1.629008,
     'hopper' : -20.272305,
+    'ant': -325.6,
 }
 
 REF_MAX_SCORE = {
     'halfcheetah' : 12135.0,
     'walker2d' : 4592.3,
     'hopper' : 3234.3,
+    'ant' : 3879.7,
 }
 
 ## calculated from d4rl datasets
