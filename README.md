@@ -1,4 +1,4 @@
-# Decision Transformer
+# Sample-Efficient Decision Transformer (SE-DT)
 
 
 ## Overview
